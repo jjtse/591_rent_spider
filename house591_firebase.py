@@ -23,9 +23,9 @@ def push_data(new_post_list):
         post_id = new_post_list[i]
         print(post_id)
 
-        # ref.push().set({
-        #     post_id: 'null'
-        # })
+        ref.push().set({
+            post_id: 'null'
+        })
 
 
 if __name__ == '__main__':

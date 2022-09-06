@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from house591_firebase import access_db
 from house591_firebase import push_data
+from house591_search_notify import lineNotifyMessage
 
 
 class House591Spider():
@@ -79,6 +80,7 @@ class House591Spider():
 
 
 if __name__ == "__main__":
+    token = '你的權杖'  # LINE Notify 權杖
     post_id_container = []
     house591_spider = House591Spider()
 
@@ -96,7 +98,7 @@ if __name__ == "__main__":
             'section': '11',  # 南港區
             'kind': '2',  # (類型) 獨立套房
             'multiPrice': '10000_20000',
-            'other': 'newPost',  # (特色)
+            'other': 'near_subway,newPost',  # (特色)
 
         }
         # 排序依據
@@ -107,15 +109,24 @@ if __name__ == "__main__":
         }
         total_count, houses = house591_spider.search(filter_params, sort_params)
         for count in range(0, total_count):
-            # 儲存現有的物件id
+            # 儲存此刻搜尋的物件id
             post_id = houses[count]['post_id']
             temp.append(str(post_id))
 
-        # 比對需上傳的資料
+        # 比對出新的物件資料
         new_post_list = [element for element in temp if element not in post_id_container]
+        for count in range(0, total_count):
+            post_id = str(houses[count]['post_id'])
+            if post_id in new_post_list:
+                title = houses[count]['title']
+                price = houses[count]['price']
+                floor_str = houses[count]['floor_str']
+                url = 'https://rent.591.com.tw/home/'+post_id
+                message = f'{title}\n{floor_str}\n租金:{price}\n{url}'
+                lineNotifyMessage(token, message)
 
-        # 上傳資料庫
+        # 上傳新的物件id到資料庫
         push_data(new_post_list)
         post_id_container.extend(new_post_list)
 
-        time.sleep(300)
+        time.sleep(180)
